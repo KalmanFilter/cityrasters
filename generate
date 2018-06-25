@@ -1,0 +1,65 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jun 21 16:48:47 2018
+
+@author: cityre
+"""
+import numpy as np
+import urllib
+import json
+from scipy.sparse import lil_matrix
+#import geopy
+#import matplotlib.pyplot as plt
+from pygeotile.point import Point
+import matplotlib.path as mpltPath
+#from scipy.spatial import ConvexHull
+
+request_url = 'http://api.tianditu.com/administrative?postStr={%22searchWord%22:%22%E8%8B%8F%E5%B7%9E%22,%22searchType%22:%221%22,%22needSubInfo%22:%22false%22,%22needAll%22:%22false%22,%22needPolygon%22:%22true%22,%22needPre%22:%22false%22}'
+response = urllib.request.urlopen(request_url)
+html_response = response.read()
+encoding = response.headers.get_content_charset('utf-8')
+decoded_html = html_response.decode(encoding)
+json_html = json.loads(decoded_html)
+poly = json_html['data'][0]['points'][0]['region']
+poly = ",".join(poly.split())
+x = poly.split(',')
+x = np.array(x)
+n = int(x.size/2)
+x = x.reshape((n,2))
+x_lonlat = x.astype('float64')
+x_mercator = np.zeros((n,2))
+# what the hell is MERCATOR
+for i in range(0,n):
+    x_mercator[i,0] = Point.from_latitude_longitude(x_lonlat[i,1],x_lonlat[i,0]).meters[0]
+    x_mercator[i,1] = Point.from_latitude_longitude(x_lonlat[i,1],x_lonlat[i,0]).meters[1]
+#plt.plot(x_mercator[:,0],x_mercator[:,1])
+   
+mt_x = np.arange(min(x_mercator[:,0]),max(x_mercator[:,0]),200)
+mt_y = np.arange(min(x_mercator[:,1]),max(x_mercator[:,1]),200)
+l = lil_matrix((99,105))
+
+
+
+mt_x = np.arange(min(x_mercator[:,0]),max(x_mercator[:,0]),1600)
+mt_y = np.arange(min(x_mercator[:,1]),max(x_mercator[:,1]),1600)
+
+
+path = mpltPath.Path(x_mercator)
+points = x_mercator
+d = path.contains_points(points)
+
+
+#hull_path.contains_points
+
+#coords_1 = (32.047, 120.501)
+#coords_2 = (32.036, 120.51)
+#
+#print(geopy.distance.vincenty(coords_1, coords_2).km)
+#
+#a = [36.055025, 120.300426]
+#b = [36.062024, 120.306338]
+#
+#c = Point.from_latitude_longitude(39.8673,116.366)
+
+#Point.from_latitude_longitude(40.2865,116.17).meters
+
